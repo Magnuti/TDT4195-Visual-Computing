@@ -166,8 +166,7 @@ fn main() {
             );
         }
 
-        // Task 1 data
-        let vertices: Vec<f32> = vec![
+        /*let vertices: Vec<f32> = vec![
             0.0, 0.0, 0.0, //       Center 0
             -0.5, 0.0, 0.0, //      Left center 1
             0.5, 0.0, 0.0, //       Right center 2
@@ -179,21 +178,21 @@ fn main() {
             -0.25, -0.5, 0.0, //    Bottom left 8
             0.25, -0.5, 0.0, //     Bottom right 9
             0.75, -0.5, 0.0, //     Bottom most right 10
-        ];
+        ];*/
 
         // Note that we need to specify the coordinates in a non-clockwise order for triangles
         // https://www.khronos.org/opengl/wiki/Face_Culling
-        let indices: Vec<u32> = vec![
+        /*let indices: Vec<u32> = vec![
             3, 1, 4, // Top left triangle
             4, 0, 5, // Top center triangle
             5, 2, 6, // Top right triangle
             7, 8, 1, // Bottom left triangle
             8, 9, 0, // Bottom center triangle
             9, 10, 2, // Bottom right triangle
-        ];
+        ];*/
 
         // One RGBA value per vertex in vertices i.e. 4 values here per 3 values in vertices
-        let colors: Vec<f32> = vec![
+        /*let colors: Vec<f32> = vec![
             1.0, 1.0, 1.0, 1.0, // White
             0.0, 1.0, 1.0, 1.0, // GB
             1.0, 0.0, 1.0, 1.0, // RB
@@ -205,22 +204,42 @@ fn main() {
             1.0, 0.0, 0.0, 0.5, // Red 50%
             0.0, 1.0, 0.0, 0.5, // Green 50%
             0.0, 0.0, 1.0, 0.5, // Blue 50%
-        ];
-
-        // Task 2 data
-        /*let vertices: Vec<f32> = vec![
-            0.6, -0.8, -1.2, //
-            0.0, 0.4, 0.0, //
-            -0.8, -0.2, 1.2, //
-        ];
-        let indices: Vec<u32> = vec![0, 1, 2];*/
-
-        // Task 2d indices
-        /*let indices: Vec<u32> = vec![
-            3, 1, 4, // Top left triangle
-            5, 2, 6, // Top right triangle
-            8, 9, 0, // Bottom center triangle
         ];*/
+
+        /* Task 2 */
+        // Swap 0.5 with -0.5 to enable transparency
+        let vertices: Vec<f32> = vec![
+            0.0, 0.0, 0.0, //       Center 0
+            -0.5, 0.0, -0.5, //     Left center 1
+            0.5, 0.0, 0.5, //       Right center 2
+            -0.75, -0.5, -0.5, //   Bottom most left 3
+            -0.25, -0.5, 0.0, //    Bottom left 4
+            -0.10, -0.5, 0.5, //    Bottom a bit left 5
+            0.10, -0.5, -0.5, //    Bottom a bit right 6
+            0.25, -0.5, 0.0, //     Bottom right 7
+            0.75, -0.5, 0.5, //     Bottom most right 8
+        ];
+
+        let indices: Vec<u32> = vec![
+            1, 3, 6, // Bottom left triangle
+            0, 4, 7, // Bottom center triangle
+            2, 5, 8, // Bottom right triangle
+        ];
+
+        // One RGBA value per vertex in vertices i.e. 4 values here per 3 values in vertices
+        // The triangle-indexes given by indicies are equal here
+        let colors: Vec<f32> = vec![
+            1.0, 0.0, 1.0, 0.4, //      Center 0
+            0.0, 1.0, 1.0, 0.4, //      Left center 1
+            1.0, 1.0, 0.0, 0.4, //      Right center 2
+            0.0, 1.0, 1.0, 0.4, //      Bottom most left 3
+            1.0, 0.0, 1.0, 0.4, //      Bottom left 4
+            1.0, 1.0, 0.0, 0.4, //      Bottom a bit left 5
+            0.0, 1.0, 1.0, 0.4, //      Bottom a bit right 6
+            1.0, 0.0, 1.0, 0.4, //      Bottom right 7
+            1.0, 1.0, 0.0, 0.4, //      Bottom most right 8
+        ];
+        /* End Task 2 */
 
         // == // Set up your VAO here
         let vao_id = unsafe { create_vao(&vertices, &indices, &colors) };
