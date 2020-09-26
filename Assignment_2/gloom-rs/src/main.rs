@@ -43,13 +43,13 @@ fn offset<T>(n: u32) -> *const c_void {
 // ptr::null()
 
 // == // Modify and complete the function below for the first task
-unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
+unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>) -> u32 {
     /* Vertex array object */
     let mut vao_id = 0;
     gl::GenVertexArrays(1, &mut vao_id);
     gl::BindVertexArray(vao_id);
 
-    /* Vertex buffer object */
+    /* Vertex buffer object for positions */
     let mut buffer_id = 0;
     gl::GenBuffers(1, &mut buffer_id);
     gl::BindBuffer(gl::ARRAY_BUFFER, buffer_id);
@@ -59,6 +59,38 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
         byte_size_of_array(vertices),
         pointer_to_array(vertices),
         gl::STATIC_DRAW,
+    );
+    let vertices_index = 0;
+    gl::EnableVertexAttribArray(vertices_index);
+    gl::VertexAttribPointer(
+        vertices_index,
+        3, // 3 coordinates -> [x, y, z]
+        gl::FLOAT,
+        gl::FALSE,   // Whether OpenGL should normalize the values in the buffer
+        0, // All floats, so OpenGL fixes this. Specify a value != 0 if there are multiple types (e.g. float, integers) in one entry
+        ptr::null(), // Array buffer offset
+    );
+
+    /* Vertex Buffer Object for colors */
+    let mut buffer_color_id = 0;
+    gl::GenBuffers(1, &mut buffer_color_id);
+    gl::BindBuffer(gl::ARRAY_BUFFER, buffer_color_id);
+    gl::BufferData(
+        gl::ARRAY_BUFFER,
+        byte_size_of_array(colors),
+        pointer_to_array(colors),
+        gl::STATIC_DRAW,
+    );
+    let colors_index = 1;
+    gl::EnableVertexAttribArray(colors_index);
+    // The VertexAttribPointer give the Vertex shader info about the data
+    gl::VertexAttribPointer(
+        colors_index,
+        4, // 4 floats -> RGBA
+        gl::FLOAT,
+        gl::FALSE,   // Whether OpenGL should normalize the values in the buffer
+        0, // All floats, so OpenGL fixes this. Specify a value != 0 if there are multiple types (e.g. float, integers) in one entry
+        ptr::null(), // Array buffer offset
     );
 
     /* Index buffer */
@@ -72,20 +104,6 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
         pointer_to_array(indices),
         gl::STATIC_DRAW,
     );
-
-    let index = 0;
-    gl::EnableVertexAttribArray(index);
-
-    gl::VertexAttribPointer(
-        0, // Temp value, don't know what this is. ID? Max 16 probably
-        3, // 3 coordinates -> [x, y, z]
-        gl::FLOAT,
-        gl::FALSE,   // Whether OpenGL should normalize the values in the buffer
-        0, // All floats, so OpenGL fixes this. Specify a value != 0 if there are multiple types (e.g. float, integers) in one entry
-        ptr::null(), // 0 pointer?
-    );
-
-    // gl::BindVertexArray(index);
 
     // We do not need to call gl::VertexAttribPointer() to set up the index buffer
 
@@ -165,14 +183,29 @@ fn main() {
 
         // Note that we need to specify the coordinates in a non-clockwise order for triangles
         // https://www.khronos.org/opengl/wiki/Face_Culling
-        /*let indices: Vec<u32> = vec![
+        let indices: Vec<u32> = vec![
             3, 1, 4, // Top left triangle
             4, 0, 5, // Top center triangle
             5, 2, 6, // Top right triangle
             7, 8, 1, // Bottom left triangle
             8, 9, 0, // Bottom center triangle
             9, 10, 2, // Bottom right triangle
-        ];*/
+        ];
+
+        // One RGBA value per vertex in vertices i.e. 4 values here per 3 values in vertices
+        let colors: Vec<f32> = vec![
+            1.0, 1.0, 1.0, 1.0, // White
+            0.0, 1.0, 1.0, 1.0, // GB
+            1.0, 0.0, 1.0, 1.0, // RB
+            1.0, 1.0, 0.0, 1.0, // RG
+            0.0, 0.0, 1.0, 1.0, // B
+            0.0, 1.0, 0.0, 1.0, // G
+            1.0, 0.0, 0.0, 1.0, // R
+            1.0, 1.0, 1.0, 0.5, // White 50%
+            1.0, 0.0, 0.0, 0.5, // Red 50%
+            0.0, 1.0, 0.0, 0.5, // Green 50%
+            0.0, 0.0, 1.0, 0.5, // Blue 50%
+        ];
 
         // Task 2 data
         /*let vertices: Vec<f32> = vec![
@@ -183,14 +216,14 @@ fn main() {
         let indices: Vec<u32> = vec![0, 1, 2];*/
 
         // Task 2d indices
-        let indices: Vec<u32> = vec![
+        /*let indices: Vec<u32> = vec![
             3, 1, 4, // Top left triangle
             5, 2, 6, // Top right triangle
             8, 9, 0, // Bottom center triangle
-        ];
+        ];*/
 
         // == // Set up your VAO here
-        let vao_id = unsafe { create_vao(&vertices, &indices) };
+        let vao_id = unsafe { create_vao(&vertices, &indices, &colors) };
 
         // Basic usage of shader helper
         // The code below returns a shader object, which contains the field .program_id
