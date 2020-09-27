@@ -178,21 +178,21 @@ fn main() {
             -0.25, -0.5, 0.0, //    Bottom left 8
             0.25, -0.5, 0.0, //     Bottom right 9
             0.75, -0.5, 0.0, //     Bottom most right 10
-        ];*/
+        ];
 
         // Note that we need to specify the coordinates in a non-clockwise order for triangles
         // https://www.khronos.org/opengl/wiki/Face_Culling
-        /*let indices: Vec<u32> = vec![
+        let indices: Vec<u32> = vec![
             3, 1, 4, // Top left triangle
             4, 0, 5, // Top center triangle
             5, 2, 6, // Top right triangle
             7, 8, 1, // Bottom left triangle
             8, 9, 0, // Bottom center triangle
             9, 10, 2, // Bottom right triangle
-        ];*/
+        ];
 
         // One RGBA value per vertex in vertices i.e. 4 values here per 3 values in vertices
-        /*let colors: Vec<f32> = vec![
+        let colors: Vec<f32> = vec![
             1.0, 1.0, 1.0, 1.0, // White
             0.0, 1.0, 1.0, 1.0, // GB
             1.0, 0.0, 1.0, 1.0, // RB
@@ -240,6 +240,33 @@ fn main() {
             1.0, 1.0, 0.0, 0.4, //      Bottom most right 8
         ];
         /* End Task 2 */
+
+        /* Task 4*/
+        // The identity matrix
+        let mut shader_matrix: glm::Mat4 = glm::mat4(
+            1.0, 0.0, 0.0, 0.0, //
+            0.0, 1.0, 0.0, 0.0, //
+            0.0, 0.0, 1.0, 0.0, //
+            0.0, 0.0, 0.0, 1.0, //
+        );
+
+        // Our original z range is between [-1, 1], we want to map this to the range [-100, -1].
+        let translate_z_index: glm::Mat4 = glm::mat4(
+            1.0, 0.0, 0.0, 0.0, //
+            0.0, 1.0, 0.0, 0.0, //
+            // First scale the z-axis so that [-1, 1] -> [-49.5, 49.5]. Then we translate the z-axis -50.5 to [-100, -1].
+            0.0, 0.0, 49.5, -50.5, //
+            0.0, 0.0, 0.0, 1.0, //
+        );
+
+        let perspective: glm::Mat4 =
+            // glm::perspective((SCREEN_H / SCREEN_W) as f32, 90.0, 1.0, 100.0);
+            glm::perspective(1.0, 1.0, 1.0, 100.0);
+
+        shader_matrix = translate_z_index * shader_matrix;
+        shader_matrix = perspective * shader_matrix; // Apply the perspective on the shaderMatrix
+
+        /* End task 4*/
 
         // == // Set up your VAO here
         let vao_id = unsafe { create_vao(&vertices, &indices, &colors) };
@@ -294,6 +321,9 @@ fn main() {
 
                 // Issue the necessary commands to draw your scene here
                 gl::BindVertexArray(vao_id);
+
+                gl::UniformMatrix4fv(2, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 2), pass 1 matrix
+
                 gl::DrawElements(
                     gl::TRIANGLES,
                     indices.len() as i32,
