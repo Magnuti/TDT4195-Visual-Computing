@@ -242,14 +242,6 @@ fn main() {
         /* End Task 2 */
 
         /* Task 4*/
-        // The identity matrix
-        let mut shader_matrix: glm::Mat4 = glm::mat4(
-            1.0, 0.0, 0.0, 0.0, //
-            0.0, 1.0, 0.0, 0.0, //
-            0.0, 0.0, 1.0, 0.0, //
-            0.0, 0.0, 0.0, 1.0, //
-        );
-
         // Our original z range is between [-1, 1], we want to map this to the range [-100, -1].
         let translate_z_index: glm::Mat4 = glm::mat4(
             1.0, 0.0, 0.0, 0.0, //
@@ -262,9 +254,6 @@ fn main() {
         let perspective: glm::Mat4 =
             // glm::perspective((SCREEN_H / SCREEN_W) as f32, 90.0, 1.0, 100.0);
             glm::perspective(1.0, 1.0, 1.0, 100.0);
-
-        shader_matrix = translate_z_index * shader_matrix;
-        shader_matrix = perspective * shader_matrix; // Apply the perspective on the shaderMatrix
 
         /* End task 4*/
 
@@ -283,8 +272,14 @@ fn main() {
                 .activate();
         }
 
-        // Used to demonstrate keyboard handling -- feel free to remove
-        let mut _arbitrary_number = 0.0;
+        // World coordinates according to the camera
+        let mut x = 0.0;
+        let mut y = 0.0;
+        let mut z = 0.0;
+        let mut yaw = 0.0; // Left-right rotation (parallell to the floor)
+        let mut pitch = 0.0; // Up-down rotation
+
+        // let mut roll = 0.0; // Roll (left-right roll like in a boat)
 
         let first_frame_time = std::time::Instant::now();
         let mut last_frame_time = first_frame_time;
@@ -295,17 +290,50 @@ fn main() {
             let delta_time = now.duration_since(last_frame_time).as_secs_f32();
             last_frame_time = now;
 
+            let z_speed = 0.4;
+            let x_speed = 2.0;
+            let y_speed = 2.0;
+
             // Handle keyboard input
             if let Ok(keys) = pressed_keys.lock() {
                 for key in keys.iter() {
                     match key {
                         VirtualKeyCode::A => {
-                            _arbitrary_number += delta_time;
+                            x += delta_time * x_speed;
                         }
                         VirtualKeyCode::D => {
-                            _arbitrary_number -= delta_time;
+                            x -= delta_time * x_speed;
                         }
-
+                        VirtualKeyCode::W => {
+                            z += delta_time * z_speed;
+                        }
+                        VirtualKeyCode::S => {
+                            z -= delta_time * z_speed;
+                        }
+                        VirtualKeyCode::LShift => {
+                            y -= delta_time * y_speed;
+                        }
+                        VirtualKeyCode::LControl => {
+                            y += delta_time * y_speed;
+                        }
+                        VirtualKeyCode::Up => {
+                            pitch += delta_time;
+                        }
+                        VirtualKeyCode::Down => {
+                            pitch -= delta_time;
+                        }
+                        VirtualKeyCode::Right => {
+                            yaw += delta_time;
+                        }
+                        VirtualKeyCode::Left => {
+                            yaw -= delta_time;
+                        }
+                        /*VirtualKeyCode::E => {
+                            roll += delta_time;
+                        }
+                        VirtualKeyCode::Q => {
+                            roll -= delta_time;
+                        }*/
                         _ => {}
                     }
                 }
@@ -314,6 +342,17 @@ fn main() {
             if let Ok(mut delta) = mouse_delta.lock() {
                 *delta = (0.0, 0.0);
             }
+
+            let mut shader_matrix: glm::Mat4 = perspective * translate_z_index; // First we apply the perspective on the z-index translation matrix
+
+            // Perform the camera transformation before rendering
+            shader_matrix = glm::translate(&shader_matrix, &glm::vec3(x, 0.0, 0.0));
+            shader_matrix = glm::translate(&shader_matrix, &glm::vec3(0.0, y, 0.0));
+            shader_matrix = glm::translate(&shader_matrix, &glm::vec3(0.0, 0.0, z));
+
+            shader_matrix = glm::rotate_y(&shader_matrix, yaw);
+            shader_matrix = glm::rotate_x(&shader_matrix, pitch);
+            // shader_matrix = glm::rotate_z(&shader_matrix, roll);
 
             unsafe {
                 gl::ClearColor(0.163, 0.163, 0.163, 1.0);
