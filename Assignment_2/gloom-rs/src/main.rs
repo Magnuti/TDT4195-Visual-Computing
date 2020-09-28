@@ -251,9 +251,12 @@ fn main() {
             0.0, 0.0, 0.0, 1.0, //
         );
 
-        let perspective: glm::Mat4 =
-            // glm::perspective((SCREEN_H / SCREEN_W) as f32, 90.0, 1.0, 100.0);
-            glm::perspective(1.0, 1.0, 1.0, 100.0);
+        let perspective: glm::Mat4 = glm::perspective(
+            (SCREEN_W as f32) / (SCREEN_H as f32), // Aspect ratio = width/height
+            (60.0 * 3.14) / 180.0,                 // 60 degress FOV, but the function uses radians
+            1.0,                                   //
+            100.0,                                 //
+        );
 
         /* End task 4*/
 
