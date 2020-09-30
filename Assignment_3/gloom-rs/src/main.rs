@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::{mem, os::raw::c_void, ptr};
 
+mod mesh;
 mod shader;
 mod util;
 
@@ -43,7 +44,12 @@ fn offset<T>(n: u32) -> *const c_void {
 // ptr::null()
 
 // == // Modify and complete the function below for the first task
-unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>) -> u32 {
+unsafe fn create_vao(
+    vertices: &Vec<f32>,
+    indices: &Vec<u32>,
+    colors: &Vec<f32>,
+    normals: &Vec<f32>,
+) -> u32 {
     /* Vertex array object */
     let mut vao_id = 0;
     gl::GenVertexArrays(1, &mut vao_id);
@@ -87,6 +93,28 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>)
     gl::VertexAttribPointer(
         colors_index,
         4, // 4 floats -> RGBA
+        gl::FLOAT,
+        gl::FALSE,   // Whether OpenGL should normalize the values in the buffer
+        0, // All floats, so OpenGL fixes this. Specify a value != 0 if there are multiple types (e.g. float, integers) in one entry
+        ptr::null(), // Array buffer offset
+    );
+
+    /* Vertex Buffer Object for normals */
+    let mut buffer_normal_id = 0;
+    gl::GenBuffers(1, &mut buffer_normal_id);
+    gl::BindBuffer(gl::ARRAY_BUFFER, buffer_normal_id);
+    gl::BufferData(
+        gl::ARRAY_BUFFER,
+        byte_size_of_array(normals),
+        pointer_to_array(normals),
+        gl::STATIC_DRAW,
+    );
+    let normals_index = 2;
+    gl::EnableVertexAttribArray(normals_index);
+    // The VertexAttribPointer give the Vertex shader info about the data
+    gl::VertexAttribPointer(
+        normals_index,
+        3, // 3 floats -> XYZ
         gl::FLOAT,
         gl::FALSE,   // Whether OpenGL should normalize the values in the buffer
         0, // All floats, so OpenGL fixes this. Specify a value != 0 if there are multiple types (e.g. float, integers) in one entry
@@ -208,7 +236,7 @@ fn main() {
 
         /* Task 2 */
         // Swap 0.5 with -0.5 to enable transparency
-        let vertices: Vec<f32> = vec![
+        /*let vertices: Vec<f32> = vec![
             0.0, 0.0, 0.0, //       Center 0
             -0.5, 0.0, -0.5, //     Left center 1
             0.5, 0.0, 0.5, //       Right center 2
@@ -240,8 +268,9 @@ fn main() {
             1.0, 1.0, 0.0, 0.4, //      Bottom most right 8
         ];
         /* End Task 2 */
-
+        */
         /* Task 4*/
+
         // Our original z range is between [-1, 1], we want to map this to the range [-100, -1].
         let translate_z_index: glm::Mat4 = glm::mat4(
             1.0, 0.0, 0.0, 0.0, //
@@ -255,13 +284,26 @@ fn main() {
             (SCREEN_W as f32) / (SCREEN_H as f32), // Aspect ratio = width/height
             (60.0 * 3.14) / 180.0,                 // 60 degress FOV, but the function uses radians
             1.0,                                   //
-            100.0,                                 //
+            1000.0,                                //
         );
 
         /* End task 4*/
 
+        /* Assignment 3 */
+        let lunar_surface: mesh::Mesh = mesh::Terrain::load("./resources/lunarsurface.obj");
+
+        let lunar_surface_vao_id = unsafe {
+            create_vao(
+                &lunar_surface.vertices,
+                &lunar_surface.indices,
+                &lunar_surface.colors,
+                &lunar_surface.normals,
+            )
+        };
+        /* End assignment 3 */
+
         // == // Set up your VAO here
-        let vao_id = unsafe { create_vao(&vertices, &indices, &colors) };
+        // let vao_id = unsafe { create_vao(&vertices, &indices, &colors) };
 
         // Basic usage of shader helper
         // The code below returns a shader object, which contains the field .program_id
@@ -281,8 +323,7 @@ fn main() {
         let mut z = 0.0;
         let mut yaw = 0.0; // Left-right rotation (parallell to the floor)
         let mut pitch = 0.0; // Up-down rotation
-
-        // let mut roll = 0.0; // Roll (left-right roll like in a boat)
+        let mut roll = 0.0; // Roll (left-right roll like in a boat)
 
         let first_frame_time = std::time::Instant::now();
         let mut last_frame_time = first_frame_time;
@@ -293,9 +334,12 @@ fn main() {
             let delta_time = now.duration_since(last_frame_time).as_secs_f32();
             last_frame_time = now;
 
-            let z_speed = 0.4;
-            let x_speed = 2.0;
-            let y_speed = 2.0;
+            let z_speed = 10.0;
+            let x_speed = 10.0;
+            let y_speed = 10.0;
+            let pitch_speed = 2.0;
+            let yaw_speed = 1.5;
+            let roll_speed = 1.0;
 
             // Handle keyboard input
             if let Ok(keys) = pressed_keys.lock() {
@@ -320,23 +364,23 @@ fn main() {
                             y += delta_time * y_speed;
                         }
                         VirtualKeyCode::Up => {
-                            pitch += delta_time;
+                            pitch += delta_time * pitch_speed;
                         }
                         VirtualKeyCode::Down => {
-                            pitch -= delta_time;
+                            pitch -= delta_time * pitch_speed;
                         }
                         VirtualKeyCode::Right => {
-                            yaw += delta_time;
+                            yaw += delta_time * yaw_speed;
                         }
                         VirtualKeyCode::Left => {
-                            yaw -= delta_time;
+                            yaw -= delta_time * yaw_speed;
                         }
-                        /*VirtualKeyCode::E => {
-                            roll += delta_time;
+                        VirtualKeyCode::E => {
+                            roll += delta_time * roll_speed;
                         }
                         VirtualKeyCode::Q => {
-                            roll -= delta_time;
-                        }*/
+                            roll -= delta_time * roll_speed;
+                        }
                         _ => {}
                     }
                 }
@@ -346,29 +390,35 @@ fn main() {
                 *delta = (0.0, 0.0);
             }
 
-            let mut shader_matrix: glm::Mat4 = perspective * translate_z_index; // First we apply the perspective on the z-index translation matrix
-
-            // Perform the camera transformation before rendering
-            shader_matrix = glm::translate(&shader_matrix, &glm::vec3(x, 0.0, 0.0));
-            shader_matrix = glm::translate(&shader_matrix, &glm::vec3(0.0, y, 0.0));
-            shader_matrix = glm::translate(&shader_matrix, &glm::vec3(0.0, 0.0, z));
+            let mut shader_matrix: glm::Mat4 = perspective;
 
             shader_matrix = glm::rotate_y(&shader_matrix, yaw);
             shader_matrix = glm::rotate_x(&shader_matrix, pitch);
-            // shader_matrix = glm::rotate_z(&shader_matrix, roll);
+            shader_matrix = glm::rotate_z(&shader_matrix, roll);
+
+            // Perform the camera transformation before rendering
+            shader_matrix = glm::translate(&shader_matrix, &glm::vec3(x, y, z));
 
             unsafe {
                 gl::ClearColor(0.163, 0.163, 0.163, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
                 // Issue the necessary commands to draw your scene here
-                gl::BindVertexArray(vao_id);
+                // gl::BindVertexArray(vao_id);
 
-                gl::UniformMatrix4fv(2, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 2), pass 1 matrix
+                gl::UniformMatrix4fv(3, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 3), pass 1 matrix
 
+                // gl::DrawElements(
+                //     gl::TRIANGLES,
+                //     indices.len() as i32,
+                //     gl::UNSIGNED_INT,
+                //     ptr::null(),
+                // );
+
+                gl::BindVertexArray(lunar_surface_vao_id);
                 gl::DrawElements(
                     gl::TRIANGLES,
-                    indices.len() as i32,
+                    lunar_surface.index_count,
                     gl::UNSIGNED_INT,
                     ptr::null(),
                 );
