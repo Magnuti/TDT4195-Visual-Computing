@@ -4,6 +4,7 @@ use std::thread;
 use std::{mem, os::raw::c_void, ptr};
 
 mod mesh;
+mod scene_graph;
 mod shader;
 mod util;
 
@@ -138,6 +139,29 @@ unsafe fn create_vao(
     return vao_id;
 }
 
+unsafe fn create_vao_from_mesh(mesh: &mesh::Mesh) -> u32 {
+    return create_vao(&mesh.vertices, &mesh.indices, &mesh.colors, &mesh.normals);
+}
+
+unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm::Mat4) {
+    // Check if node is drawable, set uniforms, draw
+    // Checks if there are elements in the indicies array
+    if root.index_count > 0 {
+        gl::BindVertexArray(root.vao_id);
+        gl::DrawElements(
+            gl::TRIANGLES,
+            root.index_count,
+            gl::UNSIGNED_INT,
+            ptr::null(),
+        );
+    }
+
+    // Recurse
+    for &child in &root.children {
+        draw_scene(&*child, view_projection_matrix);
+    }
+}
+
 fn main() {
     // Set up the necessary objects to deal with windows and event handling
     let el = glutin::event_loop::EventLoop::new();
@@ -194,92 +218,6 @@ fn main() {
             );
         }
 
-        /*let vertices: Vec<f32> = vec![
-            0.0, 0.0, 0.0, //       Center 0
-            -0.5, 0.0, 0.0, //      Left center 1
-            0.5, 0.0, 0.0, //       Right center 2
-            -0.75, 0.5, 0.0, //     Top most left 3
-            -0.25, 0.5, 0.0, //     Top left 4
-            0.25, 0.5, 0.0, //      Top right 5
-            0.75, 0.5, 0.0, //      Top most right 6
-            -0.75, -0.5, 0.0, //    Bottom most left 7
-            -0.25, -0.5, 0.0, //    Bottom left 8
-            0.25, -0.5, 0.0, //     Bottom right 9
-            0.75, -0.5, 0.0, //     Bottom most right 10
-        ];
-
-        // Note that we need to specify the coordinates in a non-clockwise order for triangles
-        // https://www.khronos.org/opengl/wiki/Face_Culling
-        let indices: Vec<u32> = vec![
-            3, 1, 4, // Top left triangle
-            4, 0, 5, // Top center triangle
-            5, 2, 6, // Top right triangle
-            7, 8, 1, // Bottom left triangle
-            8, 9, 0, // Bottom center triangle
-            9, 10, 2, // Bottom right triangle
-        ];
-
-        // One RGBA value per vertex in vertices i.e. 4 values here per 3 values in vertices
-        let colors: Vec<f32> = vec![
-            1.0, 1.0, 1.0, 1.0, // White
-            0.0, 1.0, 1.0, 1.0, // GB
-            1.0, 0.0, 1.0, 1.0, // RB
-            1.0, 1.0, 0.0, 1.0, // RG
-            0.0, 0.0, 1.0, 1.0, // B
-            0.0, 1.0, 0.0, 1.0, // G
-            1.0, 0.0, 0.0, 1.0, // R
-            1.0, 1.0, 1.0, 0.5, // White 50%
-            1.0, 0.0, 0.0, 0.5, // Red 50%
-            0.0, 1.0, 0.0, 0.5, // Green 50%
-            0.0, 0.0, 1.0, 0.5, // Blue 50%
-        ];*/
-
-        /* Task 2 */
-        // Swap 0.5 with -0.5 to enable transparency
-        /*let vertices: Vec<f32> = vec![
-            0.0, 0.0, 0.0, //       Center 0
-            -0.5, 0.0, -0.5, //     Left center 1
-            0.5, 0.0, 0.5, //       Right center 2
-            -0.75, -0.5, -0.5, //   Bottom most left 3
-            -0.25, -0.5, 0.0, //    Bottom left 4
-            -0.10, -0.5, 0.5, //    Bottom a bit left 5
-            0.10, -0.5, -0.5, //    Bottom a bit right 6
-            0.25, -0.5, 0.0, //     Bottom right 7
-            0.75, -0.5, 0.5, //     Bottom most right 8
-        ];
-
-        let indices: Vec<u32> = vec![
-            1, 3, 6, // Bottom left triangle
-            0, 4, 7, // Bottom center triangle
-            2, 5, 8, // Bottom right triangle
-        ];
-
-        // One RGBA value per vertex in vertices i.e. 4 values here per 3 values in vertices
-        // The triangle-indexes given by indicies are equal here
-        let colors: Vec<f32> = vec![
-            1.0, 0.0, 1.0, 0.4, //      Center 0
-            0.0, 1.0, 1.0, 0.4, //      Left center 1
-            1.0, 1.0, 0.0, 0.4, //      Right center 2
-            0.0, 1.0, 1.0, 0.4, //      Bottom most left 3
-            1.0, 0.0, 1.0, 0.4, //      Bottom left 4
-            1.0, 1.0, 0.0, 0.4, //      Bottom a bit left 5
-            0.0, 1.0, 1.0, 0.4, //      Bottom a bit right 6
-            1.0, 0.0, 1.0, 0.4, //      Bottom right 7
-            1.0, 1.0, 0.0, 0.4, //      Bottom most right 8
-        ];
-        /* End Task 2 */
-        */
-        /* Task 4*/
-
-        // Our original z range is between [-1, 1], we want to map this to the range [-100, -1].
-        let translate_z_index: glm::Mat4 = glm::mat4(
-            1.0, 0.0, 0.0, 0.0, //
-            0.0, 1.0, 0.0, 0.0, //
-            // First scale the z-axis so that [-1, 1] -> [-49.5, 49.5]. Then we translate the z-axis -50.5 to [-100, -1].
-            0.0, 0.0, 49.5, -50.5, //
-            0.0, 0.0, 0.0, 1.0, //
-        );
-
         let perspective: glm::Mat4 = glm::perspective(
             (SCREEN_W as f32) / (SCREEN_H as f32), // Aspect ratio = width/height
             (60.0 * 3.14) / 180.0,                 // 60 degress FOV, but the function uses radians
@@ -287,19 +225,45 @@ fn main() {
             1000.0,                                //
         );
 
-        /* End task 4*/
-
         /* Assignment 3 */
         let lunar_surface: mesh::Mesh = mesh::Terrain::load("./resources/lunarsurface.obj");
 
-        let lunar_surface_vao_id = unsafe {
-            create_vao(
-                &lunar_surface.vertices,
-                &lunar_surface.indices,
-                &lunar_surface.colors,
-                &lunar_surface.normals,
-            )
-        };
+        let lunar_surface_vao_id = unsafe { create_vao_from_mesh(&lunar_surface) };
+
+        let helicopter: mesh::Helicopter = mesh::Helicopter::load("./resources/helicopter.obj");
+
+        let helicopter_body_vao_id = unsafe { create_vao_from_mesh(&helicopter.body) };
+        let helicopter_door_vao_id = unsafe { create_vao_from_mesh(&helicopter.door) };
+        let helicopter_main_rotor_vao_id = unsafe { create_vao_from_mesh(&helicopter.main_rotor) };
+        let helicopter_tail_rotor_vao_id = unsafe { create_vao_from_mesh(&helicopter.tail_rotor) };
+
+        /* Scene graph start */
+        let mut root_scene_node = scene_graph::SceneNode::new();
+
+        let mut terrain_scene_node =
+            scene_graph::SceneNode::from_vao(lunar_surface_vao_id, lunar_surface.index_count);
+        let mut helicopter_body_scene_node =
+            scene_graph::SceneNode::from_vao(helicopter_body_vao_id, helicopter.body.index_count);
+        let helicopter_door_scene_node =
+            scene_graph::SceneNode::from_vao(helicopter_door_vao_id, helicopter.door.index_count);
+        let helicopter_main_rotor_scene_node = scene_graph::SceneNode::from_vao(
+            helicopter_main_rotor_vao_id,
+            helicopter.main_rotor.index_count,
+        );
+        let helicopter_tail_rotor_scene_node = scene_graph::SceneNode::from_vao(
+            helicopter_tail_rotor_vao_id,
+            helicopter.tail_rotor.index_count,
+        );
+
+        root_scene_node.add_child(&terrain_scene_node);
+
+        terrain_scene_node.add_child(&helicopter_body_scene_node);
+
+        helicopter_body_scene_node.add_child(&helicopter_door_scene_node);
+        helicopter_body_scene_node.add_child(&helicopter_main_rotor_scene_node);
+        helicopter_body_scene_node.add_child(&helicopter_tail_rotor_scene_node);
+        /* Scene graph end */
+
         /* End assignment 3 */
 
         // == // Set up your VAO here
@@ -408,20 +372,7 @@ fn main() {
 
                 gl::UniformMatrix4fv(3, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 3), pass 1 matrix
 
-                // gl::DrawElements(
-                //     gl::TRIANGLES,
-                //     indices.len() as i32,
-                //     gl::UNSIGNED_INT,
-                //     ptr::null(),
-                // );
-
-                gl::BindVertexArray(lunar_surface_vao_id);
-                gl::DrawElements(
-                    gl::TRIANGLES,
-                    lunar_surface.index_count,
-                    gl::UNSIGNED_INT,
-                    ptr::null(),
-                );
+                draw_scene(&root_scene_node, &shader_matrix);
             }
 
             context.swap_buffers().unwrap();
