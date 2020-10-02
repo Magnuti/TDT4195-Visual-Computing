@@ -17,6 +17,9 @@ use glutin::event::{
 };
 use glutin::event_loop::ControlFlow;
 
+use std::mem::ManuallyDrop;
+use std::pin::Pin;
+
 const SCREEN_W: u32 = 800;
 const SCREEN_H: u32 = 600;
 
@@ -148,6 +151,11 @@ unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm
     // Checks if there are elements in the indicies array
     if root.index_count > 0 {
         gl::BindVertexArray(root.vao_id);
+
+        let shader_matrix = root.current_transformation_matrix * view_projection_matrix;
+
+        gl::UniformMatrix4fv(3, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 3), pass 1 matrix
+
         gl::DrawElements(
             gl::TRIANGLES,
             root.index_count,
@@ -159,6 +167,37 @@ unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm
     // Recurse
     for &child in &root.children {
         draw_scene(&*child, view_projection_matrix);
+    }
+}
+
+unsafe fn update_node_transformations(
+    root: &mut scene_graph::SceneNode,
+    transformation_so_far: &glm::Mat4,
+) {
+    // Construct the correct transformation matrix
+    // root.current_transformation_matrix = root.current_transformation_matrix * transformation_so_far;
+    root.current_transformation_matrix.fill_with_identity();
+    root.current_transformation_matrix =
+        glm::scale(&root.current_transformation_matrix, &root.scale);
+    root.current_transformation_matrix =
+        glm::translate(&root.current_transformation_matrix, &root.position);
+    root.current_transformation_matrix =
+        glm::translate(&root.current_transformation_matrix, &&root.reference_point);
+    root.current_transformation_matrix =
+        glm::rotate_x(&root.current_transformation_matrix, root.rotation.x);
+    root.current_transformation_matrix =
+        glm::rotate_y(&root.current_transformation_matrix, root.rotation.y);
+    root.current_transformation_matrix =
+        glm::rotate_z(&root.current_transformation_matrix, root.rotation.z);
+    root.current_transformation_matrix =
+        glm::translate(&root.current_transformation_matrix, &-&root.reference_point);
+    root.current_transformation_matrix =
+        transformation_so_far * &root.current_transformation_matrix;
+
+    // Update the node's transformation matrix
+    // Recurse
+    for &child in &root.children {
+        update_node_transformations(&mut *child, &root.current_transformation_matrix);
     }
 }
 
@@ -250,7 +289,7 @@ fn main() {
             helicopter_main_rotor_vao_id,
             helicopter.main_rotor.index_count,
         );
-        let helicopter_tail_rotor_scene_node = scene_graph::SceneNode::from_vao(
+        let mut helicopter_tail_rotor_scene_node = scene_graph::SceneNode::from_vao(
             helicopter_tail_rotor_vao_id,
             helicopter.tail_rotor.index_count,
         );
@@ -262,6 +301,16 @@ fn main() {
         helicopter_body_scene_node.add_child(&helicopter_door_scene_node);
         helicopter_body_scene_node.add_child(&helicopter_main_rotor_scene_node);
         helicopter_body_scene_node.add_child(&helicopter_tail_rotor_scene_node);
+
+        helicopter_tail_rotor_scene_node.reference_point = glm::Vec3::new(0.35, 2.3, 10.4);
+
+        // TODO set reference_point for each node
+
+        unsafe {
+            let mut root = *Pin::into_inner(ManuallyDrop::into_inner(root_scene_node.clone())); // Extracts the scene_node from the struct
+            let identity_matrix: glm::Mat4 = glm::identity();
+            update_node_transformations(&mut root, &identity_matrix);
+        }
         /* Scene graph end */
 
         /* End assignment 3 */
@@ -370,7 +419,7 @@ fn main() {
                 // Issue the necessary commands to draw your scene here
                 // gl::BindVertexArray(vao_id);
 
-                gl::UniformMatrix4fv(3, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 3), pass 1 matrix
+                // gl::UniformMatrix4fv(3, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 3), pass 1 matrix
 
                 draw_scene(&root_scene_node, &shader_matrix);
             }

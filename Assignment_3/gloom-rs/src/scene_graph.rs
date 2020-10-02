@@ -12,6 +12,7 @@ use std::pin::Pin;
 // simplicity of use.
 type Node = ManuallyDrop<Pin<Box<SceneNode>>>;
 
+#[derive(Clone)]
 pub struct SceneNode {
     pub position: glm::Vec3,
     pub rotation: glm::Vec3,
