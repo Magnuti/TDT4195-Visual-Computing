@@ -153,9 +153,10 @@ unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm
     if root.index_count > 0 {
         gl::BindVertexArray(root.vao_id);
 
-        let shader_matrix = view_projection_matrix * root.current_transformation_matrix;
+        let mvp_matrix = view_projection_matrix * root.current_transformation_matrix;
 
-        gl::UniformMatrix4fv(3, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 3), pass 1 matrix
+        gl::UniformMatrix4fv(3, 1, gl::FALSE, mvp_matrix.as_ptr()); // Pass 1 matrix to layout (location = 3) - MVP matrix
+        gl::UniformMatrix4fv(4, 1, gl::FALSE, root.current_transformation_matrix.as_ptr()); // Pass 1 matrix to layout (location = 4) - model matrix
 
         gl::DrawElements(
             gl::TRIANGLES,
@@ -410,14 +411,14 @@ fn main() {
                 *delta = (0.0, 0.0);
             }
 
-            let mut shader_matrix: glm::Mat4 = perspective;
+            let mut view_projection_matrix: glm::Mat4 = perspective;
 
-            shader_matrix = glm::rotate_y(&shader_matrix, yaw);
-            shader_matrix = glm::rotate_x(&shader_matrix, pitch);
-            shader_matrix = glm::rotate_z(&shader_matrix, roll);
+            view_projection_matrix = glm::rotate_y(&view_projection_matrix, yaw);
+            view_projection_matrix = glm::rotate_x(&view_projection_matrix, pitch);
+            view_projection_matrix = glm::rotate_z(&view_projection_matrix, roll);
 
             // Perform the camera transformation before rendering
-            shader_matrix = glm::translate(&shader_matrix, &glm::vec3(x, y, z));
+            view_projection_matrix = glm::translate(&view_projection_matrix, &glm::vec3(x, y, z));
 
             rotate_main_rotor(&mut helicopter_main_rotor_scene_node, elapsed);
             rotate_tail_rotor(&mut helicopter_tail_rotor_scene_node, elapsed);
@@ -437,7 +438,7 @@ fn main() {
                 gl::ClearColor(0.163, 0.163, 0.163, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-                draw_scene(&root_scene_node, &shader_matrix);
+                draw_scene(&root_scene_node, &view_projection_matrix);
             }
 
             context.swap_buffers().unwrap();
