@@ -6,6 +6,7 @@ use std::{mem, os::raw::c_void, ptr};
 mod mesh;
 mod scene_graph;
 mod shader;
+mod toolbox;
 mod util;
 
 use glutin::event::{
@@ -152,7 +153,7 @@ unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm
     if root.index_count > 0 {
         gl::BindVertexArray(root.vao_id);
 
-        let shader_matrix = root.current_transformation_matrix * view_projection_matrix;
+        let shader_matrix = view_projection_matrix * root.current_transformation_matrix;
 
         gl::UniformMatrix4fv(3, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 3), pass 1 matrix
 
@@ -199,6 +200,20 @@ unsafe fn update_node_transformations(
     for &child in &root.children {
         update_node_transformations(&mut *child, &root.current_transformation_matrix);
     }
+}
+
+fn rotate_main_rotor(node: &mut scene_graph::SceneNode, elapsed_time: f32) {
+    node.rotation = glm::vec3(0.0, 15.0 * elapsed_time, 0.0);
+}
+
+fn rotate_tail_rotor(node: &mut scene_graph::SceneNode, elapsed_time: f32) {
+    node.rotation = glm::vec3(20.0 * elapsed_time, 0.0, 0.0);
+}
+
+fn change_heading(node: &mut scene_graph::SceneNode, heading: toolbox::Heading) {
+    node.position.x = heading.x;
+    node.position.z = heading.z;
+    node.rotation = glm::vec3(heading.pitch, heading.yaw, heading.roll);
 }
 
 fn main() {
@@ -285,7 +300,7 @@ fn main() {
             scene_graph::SceneNode::from_vao(helicopter_body_vao_id, helicopter.body.index_count);
         let helicopter_door_scene_node =
             scene_graph::SceneNode::from_vao(helicopter_door_vao_id, helicopter.door.index_count);
-        let helicopter_main_rotor_scene_node = scene_graph::SceneNode::from_vao(
+        let mut helicopter_main_rotor_scene_node = scene_graph::SceneNode::from_vao(
             helicopter_main_rotor_vao_id,
             helicopter.main_rotor.index_count,
         );
@@ -304,19 +319,11 @@ fn main() {
 
         helicopter_tail_rotor_scene_node.reference_point = glm::Vec3::new(0.35, 2.3, 10.4);
 
-        // TODO set reference_point for each node
+        // TODO set reference_point for each node ?
 
-        unsafe {
-            let mut root = *Pin::into_inner(ManuallyDrop::into_inner(root_scene_node.clone())); // Extracts the scene_node from the struct
-            let identity_matrix: glm::Mat4 = glm::identity();
-            update_node_transformations(&mut root, &identity_matrix);
-        }
         /* Scene graph end */
 
         /* End assignment 3 */
-
-        // == // Set up your VAO here
-        // let vao_id = unsafe { create_vao(&vertices, &indices, &colors) };
 
         // Basic usage of shader helper
         // The code below returns a shader object, which contains the field .program_id
@@ -412,14 +419,23 @@ fn main() {
             // Perform the camera transformation before rendering
             shader_matrix = glm::translate(&shader_matrix, &glm::vec3(x, y, z));
 
+            rotate_main_rotor(&mut helicopter_main_rotor_scene_node, elapsed);
+            rotate_tail_rotor(&mut helicopter_tail_rotor_scene_node, elapsed);
+
+            change_heading(
+                &mut helicopter_body_scene_node,
+                toolbox::simple_heading_animation(elapsed),
+            );
+
+            unsafe {
+                let mut root = *Pin::into_inner(ManuallyDrop::into_inner(root_scene_node.clone())); // Extracts the scene_node from the struct
+                let identity_matrix: glm::Mat4 = glm::identity();
+                update_node_transformations(&mut root, &identity_matrix);
+            }
+
             unsafe {
                 gl::ClearColor(0.163, 0.163, 0.163, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-
-                // Issue the necessary commands to draw your scene here
-                // gl::BindVertexArray(vao_id);
-
-                // gl::UniformMatrix4fv(3, 1, gl::FALSE, shader_matrix.as_ptr()); // layout (location = 3), pass 1 matrix
 
                 draw_scene(&root_scene_node, &shader_matrix);
             }
