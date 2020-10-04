@@ -18,9 +18,6 @@ use glutin::event::{
 };
 use glutin::event_loop::ControlFlow;
 
-use std::mem::ManuallyDrop;
-use std::pin::Pin;
-
 const SCREEN_W: u32 = 800;
 const SCREEN_H: u32 = 600;
 
@@ -176,26 +173,34 @@ unsafe fn update_node_transformations(
     root: &mut scene_graph::SceneNode,
     transformation_so_far: &glm::Mat4,
 ) {
-    // ! Do not submit this
     // Construct the correct transformation matrix
-    // root.current_transformation_matrix = root.current_transformation_matrix * transformation_so_far;
-    root.current_transformation_matrix.fill_with_identity();
-    root.current_transformation_matrix =
-        glm::scale(&root.current_transformation_matrix, &root.scale);
+    // Start of with the identity matrix
+    root.current_transformation_matrix = glm::identity();
+
+    // Translate
     root.current_transformation_matrix =
         glm::translate(&root.current_transformation_matrix, &root.position);
     root.current_transformation_matrix =
-        glm::translate(&root.current_transformation_matrix, &&root.reference_point);
+        glm::translate(&root.current_transformation_matrix, &root.reference_point);
+
+    // Scale
+    root.current_transformation_matrix =
+        glm::scale(&root.current_transformation_matrix, &root.scale);
+
+    // Rotate
     root.current_transformation_matrix =
         glm::rotate_x(&root.current_transformation_matrix, root.rotation.x);
     root.current_transformation_matrix =
         glm::rotate_y(&root.current_transformation_matrix, root.rotation.y);
     root.current_transformation_matrix =
         glm::rotate_z(&root.current_transformation_matrix, root.rotation.z);
+
+    // Translate reference point
     root.current_transformation_matrix =
         glm::translate(&root.current_transformation_matrix, &-&root.reference_point);
-    root.current_transformation_matrix =
-        transformation_so_far * &root.current_transformation_matrix;
+
+    // Apply
+    root.current_transformation_matrix = transformation_so_far * root.current_transformation_matrix;
 
     // Update the node's transformation matrix
     // Recurse
