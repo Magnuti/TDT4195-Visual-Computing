@@ -23,11 +23,12 @@ def convolve_im(im, kernel,
         [type]: [np.array of shape [H, W, 3]. should be same as im]
     """
     assert len(im.shape) == 3
+
     image_height = im.shape[0]
     image_width = im.shape[1]
     kernel_dim_divided = kernel.shape[0] // 2
 
-    computed = np.zeros(shape=(image_height, image_width, 3))
+    computed = np.zeros(shape=(image_height, image_width, im.shape[2]))
 
     # Different loop-orders were tried out, but this one seemed
     # to yield the lowest running time
@@ -37,11 +38,12 @@ def convolve_im(im, kernel,
                 pixel_value = 0.0
                 for ki in range(-kernel_dim_divided, kernel_dim_divided + 1):
                     for kj in range(-kernel_dim_divided, kernel_dim_divided + 1):
-                        h_coor = h_index + ki
-                        if h_coor == -1 or h_coor >= image_height:
+                        # Minus since we are using applying convolution
+                        h_coor = h_index - ki
+                        if h_coor < 0 or h_coor >= image_height:
                             continue
-                        w_coor = w_index + kj
-                        if w_coor == -1 or w_coor >= image_width:
+                        w_coor = w_index - kj
+                        if w_coor < 0 or w_coor >= image_width:
                             continue
                         if kj == 0 and ki == 0:
                             continue
