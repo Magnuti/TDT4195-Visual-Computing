@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pathlib
 import numpy as np
 from utils import read_im, save_im, normalize
+
 output_dir = pathlib.Path("image_solutions")
 output_dir.mkdir(exist_ok=True)
 
@@ -28,9 +29,11 @@ def convolve_im(im, kernel,
 
     computed = np.zeros(shape=(image_height, image_width, 3))
 
-    for h_index in range(image_height):
-        for w_index in range(image_width):
-            for channel_index in range(im.shape[2]):
+    # Different loop-orders were tried out, but this one seemed
+    # to yield the lowest running time
+    for channel_index in range(im.shape[2]):
+        for h_index in range(image_height):
+            for w_index in range(image_width):
                 pixel_value = 0.0
                 for ki in range(-kernel_dim_divided, kernel_dim_divided + 1):
                     for kj in range(-kernel_dim_divided, kernel_dim_divided + 1):
