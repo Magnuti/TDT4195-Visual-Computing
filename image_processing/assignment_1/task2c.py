@@ -6,7 +6,6 @@ from utils import read_im, save_im, normalize
 output_dir = pathlib.Path("image_solutions")
 output_dir.mkdir(exist_ok=True)
 
-
 im = read_im(pathlib.Path("images", "lake.jpg"))
 plt.imshow(im)
 
@@ -32,29 +31,38 @@ def convolve_im(im, kernel,
 
     # Different loop-orders were tried out, but this one seemed
     # to yield the lowest running time
-    for channel_index in range(im.shape[2]):
+    for channel_index in range(im.shape[2]):  # RGB channel
         for h_index in range(image_height):
             for w_index in range(image_width):
                 pixel_value = 0.0
                 for ki in range(-kernel_dim_divided, kernel_dim_divided + 1):
+                    h_coor = h_index - ki
+                    if h_coor < 0 or h_coor >= image_height:
+                        continue
                     for kj in range(-kernel_dim_divided, kernel_dim_divided + 1):
                         # Minus since we are using applying convolution
-                        h_coor = h_index - ki
-                        if h_coor < 0 or h_coor >= image_height:
-                            continue
                         w_coor = w_index - kj
                         if w_coor < 0 or w_coor >= image_width:
                             continue
-                        if kj == 0 and ki == 0:
-                            continue
-                        pixel_value += kernel[ki, kj] * \
-                            im[h_coor, w_coor, channel_index]
+                        pixel_value += kernel[kernel_dim_divided + ki,
+                                              kernel_dim_divided + kj] * im[h_coor, w_coor, channel_index]
                 computed[h_index, w_index, channel_index] = pixel_value
 
     return computed
 
-    # Define the convolutional kernels
-h_a = np.ones((3, 3)) / 9
+
+# Define the convolutional kernels
+
+# The Gaussian blur 5x5
+h_b = 1 / 256 * np.array([
+    [1, 4, 6, 4, 1],
+    [4, 16, 24, 16, 4],
+    [6, 24, 36, 24, 6],
+    [4, 16, 24, 16, 4],
+    [1, 4, 6, 4, 1]
+])
+
+# Sobel kernel vertical edge detection
 sobel_x = np.array([
     [-1, 0, 1],
     [-2, 0, 2],
@@ -62,8 +70,9 @@ sobel_x = np.array([
 ])
 
 # Convolve images
-im_smoothed = convolve_im(im.copy(), h_a)
+im_smoothed = convolve_im(im.copy(), h_b)
 save_im(output_dir.joinpath("im_smoothed.jpg"), im_smoothed)
+
 im_sobel = convolve_im(im, sobel_x)
 save_im(output_dir.joinpath("im_sobel.jpg"), im_sobel)
 
