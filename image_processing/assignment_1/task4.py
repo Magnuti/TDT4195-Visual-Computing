@@ -8,11 +8,10 @@ import utils
 import dataloaders
 import torchvision
 from trainer import Trainer
+
+
 torch.random.manual_seed(0)
 np.random.seed(0)
-
-# TODO Use only Task4, delete all the others.
-# TODO use the zip script for delivery
 
 output_dir_images = pathlib.Path("image_solutions")
 output_dir_images.mkdir(exist_ok=True)
@@ -302,4 +301,4 @@ def task_c():
 
 
 task_abd()
-# task_c()
+task_c()
