@@ -31,8 +31,28 @@ def create_model():
         Initializes the mode. Edit the code below if you would like to change the model.
     """
     model = nn.Sequential(
+        # First convolution
+        nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
+        nn.ReLU(),
+        nn.MaxPool2d(kernel_size=2, stride=2),
+
+        # Second convolution
+        nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+        nn.ReLU(),
+        nn.MaxPool2d(kernel_size=2, stride=2),
+
+        # Third convolution
+        nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+        nn.ReLU(),
+        nn.MaxPool2d(kernel_size=2, stride=2),
+
+        # Neural network
         nn.Flatten(),  # Flattens the image from shape (batch_size, C, Height, width) to (batch_size, C*height*width)
-        nn.Linear(32*32*1, 10)
+        # nn.Linear(4194304, 64),
+        nn.Linear(32*32*2, 64),
+
+        nn.ReLU(),
+        nn.Linear(64, 10)
         # No need to include softmax, as this is already combined in the loss function
     )
     # Transfer model to GPU memory if a GPU is available
@@ -42,7 +62,6 @@ def create_model():
 
 model = create_model()
 
-
 # Test if the model is able to do a single forward pass
 example_images = utils.to_cuda(example_images)
 output = model(example_images)
@@ -50,6 +69,8 @@ print("Output shape:", output.shape)
 expected_shape = (batch_size, 10)  # 10 since mnist has 10 different classes
 assert output.shape == expected_shape,    f"Expected shape: {expected_shape}, but got: {output.shape}"
 
+print("Using CUDA:", torch.cuda.is_available())
+print("Current device:", torch.cuda.current_device())
 
 # Hyperparameters
 learning_rate = .02
