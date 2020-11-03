@@ -85,6 +85,10 @@ For a total of $32 + 2048 + 262 144 + 268 435 456 + 640 = 268 700 320$ weights.
 ## Task 2
 
 ### 2.a)
+Final Test loss: 0.041. Final Test accuracy: 0.987
 
 <img src="image_processed/task2a_plot.png">
+
+## 2.b)
+
 
