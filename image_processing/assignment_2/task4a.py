@@ -21,22 +21,57 @@ def convolve_im(im: np.array,
         im: np.array of shape [H, W]
     """
     # START YOUR CODE HERE ### (You can change anything inside this block)
-    conv_result = im
+    dft_image = np.fft.fft2(im)
+
+    dft_image_filtered = dft_image * fft_kernel
+
+    def to_real(dft_img):
+        return np.sqrt(dft_image.real**2 + dft_image.imag**2)
+
+    conv_result = np.fft.ifft2(dft_image_filtered).real
     if verbose:
+        dft_image = np.fft.fftshift(dft_image)
+        dft_image = to_real(dft_image)
+        dft_image = np.log(dft_image + 1)
+
+        fft_kernel = np.fft.fftshift(fft_kernel)
+
+        dft_image_filtered = np.fft.fftshift(dft_image_filtered)
+        dft_image_filtered = to_real(dft_image_filtered)
+        dft_image_filtered = np.log(dft_image_filtered + 1)
+
         # Use plt.subplot to place two or more images beside eachother
-        plt.figure(figsize=(20, 4))
+        plt.figure(figsize=(16, 6))
+
         # plt.subplot(num_rows, num_cols, position (1-indexed))
         plt.subplot(1, 5, 1)
         plt.imshow(im, cmap="gray")
-        plt.subplot(1, 5, 2)
+
         # Visualize FFT
-        plt.subplot(1, 5, 3)
+        plt.subplot(1, 5, 2)
+        plt.imshow(dft_image)
+
         # Visualize FFT kernel
-        plt.subplot(1, 5, 4)
+        plt.subplot(1, 5, 3)
+        plt.imshow(fft_kernel)
+
         # Visualize filtered FFT image
-        plt.subplot(1, 5, 5)
+        plt.subplot(1, 5, 4)
+        plt.imshow(np.fft.fftshift(dft_image_filtered))
+
         # Visualize filtered spatial image
+        plt.subplot(1, 5, 5)
         plt.imshow(conv_result, cmap="gray")
+
+        first_value = fft_kernel[0][0]
+        if(first_value == 1.0):
+            plt.savefig(utils.image_output_dir.joinpath(
+                "task4a_high_pass.png"))
+        elif(first_value == 0.0):
+            plt.savefig(utils.image_output_dir.joinpath(
+                "task4a_low_pass.png"))
+        else:
+            plt.savefig(utils.image_output_dir.joinpath("task4a_unknown.png"))
 
     ### END YOUR CODE HERE ###
     return conv_result
