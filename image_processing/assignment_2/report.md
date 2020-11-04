@@ -111,4 +111,27 @@ The five filters explained:
 4. 
 5. This filter is used to detect blue balues, as the sky is lit.
 
+## Task 3
+
+### 3.a)
+The wider dots in the frequency domain is, the higher the frequency (smaller distance) of the lines in the spatial domain.
+Horizontal lines in the spatial domain get vertical dots in the frequency domain
+* 1a - 2e
+* 1b - 2c
+* 1c - 2f
+
+Vertical lines in the spatial domain get horizontal dots in the frequency domain
+* 1d -  2b
+* 1e -  2d
+* 1f -  2a
+
+### 3.b)
+
+A low-pass filter removes all high frequencies, while a high-pass filter removes all low frequencies. Low-pass filters are often used to blur/remove noise, becuase high frequencies are often noise. While high-pass filters are often used for edge detection.
+
+### 3.c)
+Image (a) is a high-pass filter, while image (b) is a low-pass filter. Low-pass are dark around, while high-pass are dark in the middle.
+
+## Task 4
+
 
