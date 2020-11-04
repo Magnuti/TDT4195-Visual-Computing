@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
@@ -73,7 +74,7 @@ print("Using CUDA:", torch.cuda.is_available())
 print("Current device:", torch.cuda.current_device())
 
 # Hyperparameters
-learning_rate = .02
+learning_rate = .02  # Task 2a
 num_epochs = 5
 
 
@@ -81,9 +82,11 @@ num_epochs = 5
 loss_function = torch.nn.CrossEntropyLoss()
 
 # Define optimizer (Stochastic Gradient Descent)
-optimizer = torch.optim.SGD(model.parameters(),
+optimizer = torch.optim.SGD(model.parameters(),  # Task 2a
                             lr=learning_rate)
 
+
+start = time.time()
 
 trainer = Trainer(
     model=model,
@@ -95,18 +98,45 @@ trainer = Trainer(
 )
 train_loss_dict, test_loss_dict = trainer.train(num_epochs)
 
+print("Training 2a took {} seconds".format(round(time.time() - start, 3)))
+
+# Task 2b
+
+learning_rate = 0.001  # Task 2b
+
+optimizer = torch.optim.Adam(model.parameters(),  # Task 2b
+                             lr=learning_rate)
+
+start = time.time()
+
+trainer = Trainer(
+    model=model,
+    dataloader_train=dataloader_train,
+    dataloader_test=dataloader_test,
+    batch_size=batch_size,
+    loss_function=loss_function,
+    optimizer=optimizer
+)
+train_loss_dict_b, test_loss_dict_b = trainer.train(num_epochs)
+
+print("Training 2b took {} seconds".format(round(time.time() - start, 3)))
+
 
 # We can now plot the training loss with our utility script
 
 # Plot loss
-utils.plot_loss(train_loss_dict, label="Train Loss")
-utils.plot_loss(test_loss_dict, label="Test Loss")
+utils.plot_loss(train_loss_dict, label="Train Loss a")
+utils.plot_loss(test_loss_dict, label="Test Loss a")
+utils.plot_loss(train_loss_dict_b, label="Train Loss b")
+utils.plot_loss(test_loss_dict_b, label="Test Loss b")
 # Limit the y-axis of the plot (The range should not be increased!)
-plt.ylim([0, .5])
+# plt.ylim([0, .5]) # Task 2a
+plt.ylim([0, 1])  # Task 2b
 plt.legend()
 plt.xlabel("Global Training Step")
 plt.ylabel("Cross Entropy Loss")
-plt.savefig(utils.image_output_dir.joinpath("task2a_plot.png"))
+# plt.savefig(utils.image_output_dir.joinpath("task2a_plot.png")) # Task 2a
+plt.savefig(utils.image_output_dir.joinpath("task2b_plot.png"))  # Task 2b
 plt.show()
 
 final_loss, final_acc = utils.compute_loss_and_accuracy(
