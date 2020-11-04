@@ -1,5 +1,3 @@
-
-
 import matplotlib.pyplot as plt
 from PIL import Image
 import torchvision
@@ -74,8 +72,11 @@ indices = [5, 8, 19, 22, 34]
 num_filters = len(indices)
 # %%
 plt.figure(figsize=(20, 4))
-plt.subplot(2, num_filters, n)
-# Plot weight here
-plt.subplot(2, num_filters, num_filters+n)
-# Plot activation here
+n = 1
+for i in indices:
+    plt.subplot(2, num_filters, n)
+    # Plot weight here
+    plt.subplot(2, num_filters, num_filters+n)
+    # Plot activation here
+    n += 1
 ### END YOUR CODE HERE ###
