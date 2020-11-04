@@ -89,6 +89,26 @@ Final Test loss: 0.041. Final Test accuracy: 0.987
 
 <img src="image_processed/task2a_plot.png">
 
-## 2.b)
+### 2.b)
+
+<img src="image_processed/task2b_plot.png">
+
+### 2.c)
+
+Original image:
+
+<img src="images/zebra.jpg" title="Original image" alt="Original image">
+
+Weights and activations:
+
+<img src="image_processed/task2c_plot.png">
+
+### 2.d)
+The five filters explained:
+1. This filter is clearly a vertical edge-detection filter, and can be seen as the Sobel operator. We see that the Zebra's vertical stripes are clear, while the horizontal line between the sky and the grass (blue-green) is nearly gone.
+2. 
+3. This filter is used to detect green values, as the grass is lit.
+4. 
+5. This filter is used to detect blue balues, as the sky is lit.
 
 

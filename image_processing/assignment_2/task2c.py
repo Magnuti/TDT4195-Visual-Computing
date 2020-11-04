@@ -3,17 +3,18 @@ from PIL import Image
 import torchvision
 import torch
 import numpy as np
+import utils
 
 
 image = Image.open("images/zebra.jpg")
-plt.imshow(image)
+# plt.imshow(image)
 print("Image shape:", image.size)
 
 
 # In this example we will use a pre-trained ResNet50 network.
 # ResNet-50 is a fully-convolutional neural network that excels at image classification.
 model = torchvision.models.resnet50(pretrained=True)
-print(model)
+# print(model)
 
 
 # In this task we are interested in visualizing the first convolutional layer. This can be retrieved by the following code block:
@@ -67,16 +68,20 @@ def torch_image_to_numpy(image: torch.Tensor):
 
 # START YOUR CODE HERE ### (You can change anything inside this block)
 # plt.subplot is a nice function to use for this task!
-# Tip: test out for indices = [01,2,3,4,5] to check that your result is correct!
+# Tip: test out for indices = [0,1,2,3,4,5] to check that your result is correct!
 indices = [5, 8, 19, 22, 34]
 num_filters = len(indices)
-# %%
-plt.figure(figsize=(20, 4))
-n = 1
-for i in indices:
-    plt.subplot(2, num_filters, n)
+
+plt.figure(figsize=(16, 6))
+for index, value in enumerate(indices):
+    plt.subplot(2, num_filters, index + 1)
     # Plot weight here
-    plt.subplot(2, num_filters, num_filters+n)
+    plt.imshow(torch_image_to_numpy(weight[value]))
+
+    plt.subplot(2, num_filters, num_filters + index + 1)
     # Plot activation here
-    n += 1
+    plt.imshow(torch_image_to_numpy(activation[0][value]), cmap="gray")
+
+plt.savefig(utils.image_output_dir.joinpath("task2c_plot.png"))  # Task 2b
+# plt.show()
 ### END YOUR CODE HERE ###
