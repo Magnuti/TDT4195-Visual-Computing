@@ -133,5 +133,5 @@ A low-pass filter removes all high frequencies, while a high-pass filter removes
 Image (a) is a high-pass filter, while image (b) is a low-pass filter. Low-pass are dark around, while high-pass are dark in the middle.
 
 ## Task 4
-
+See code.
 

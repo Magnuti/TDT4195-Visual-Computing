@@ -18,22 +18,29 @@ if __name__ == "__main__":
     impath = os.path.join("images", "noisy_moon.png")
     im = utils.read_im(impath)
 
+    # START YOUR CODE HERE ### (You can change anything inside this block)
+
     # Since the spikes are on a simple horizontal line in the center around [265:275], we
     # can simply craete a kernel which removes theese values. Non-shifted, [265:275] becomes [0:10]
     # Note that the middle area should be unaffected.
-
     kernel = np.ones(im.shape)
     spike_height = 4  # Lines are barely visible at < 4
-    spike_height = spike_height // 2
+    image_center_x = im.shape[1] // 2
+    image_center_y = im.shape[0] // 2
     center_width = 28  # Lines are visible for > 28
 
-    for y in range(- spike_height, spike_height):
-        for x in range(center_width, im.shape[1] // 2):
-            kernel[y][x] = 0
-        for x in range(im.shape[1] // 2, im.shape[1] - center_width):
-            kernel[y][x] = 0
+    kernel[image_center_y - spike_height //
+           2:image_center_y + spike_height // 2] = 0
+    kernel[image_center_y - spike_height // 2:image_center_y + spike_height //
+           2, image_center_x - center_width:image_center_x + center_width] = 1
 
-    # START YOUR CODE HERE ### (You can change anything inside this block)
+    # plt.figure(figsize=(8, 8))
+    # plt.imshow(kernel)
+    # plt.show()
+
+    # For simplicity, we create the kernel first, then use it. Thus, we have to shift it before multiplication
+    kernel = np.fft.fftshift(kernel)
+
     fft_im = np.fft.fft2(im)
 
     # Note that this is not matrix multiplication, only point-vise multiplication
