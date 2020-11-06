@@ -106,9 +106,9 @@ Weights and activations:
 ### 2.d)
 The five filters explained:
 1. This filter is clearly a vertical edge-detection filter, and can be seen as the Sobel operator. We see that the Zebra's vertical stripes are clear, while the horizontal line between the sky and the grass (blue-green) is nearly gone.
-2. 
+2. This filter looks like it detects diagonal black stripes (different from normal edge detection as the filter has negative-positive-negative stripes instead of negative-positive stripes).
 3. This filter is used to detect green values, as the grass is lit.
-4. 
+4. This filter looks like it detects horionztal black stripes (as point 2. mentioned).
 5. This filter is used to detect blue balues, as the sky is lit.
 
 ## Task 3

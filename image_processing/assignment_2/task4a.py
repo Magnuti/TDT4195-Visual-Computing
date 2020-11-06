@@ -4,6 +4,13 @@ import skimage
 import utils
 
 
+# From https://github.com/hukkelas/TDT4195-StarterCode/blob/master/tutorials/frequency_domain.ipynb
+def magnitude(fft_im):
+    real = fft_im.real
+    imag = fft_im.imag
+    return np.sqrt(real**2 + imag**2)
+
+
 def convolve_im(im: np.array,
                 fft_kernel: np.array,
                 verbose=True):
@@ -25,19 +32,16 @@ def convolve_im(im: np.array,
 
     dft_image_filtered = dft_image * fft_kernel
 
-    def to_real(dft_img):
-        return np.sqrt(dft_image.real**2 + dft_image.imag**2)
-
     conv_result = np.fft.ifft2(dft_image_filtered).real
     if verbose:
         dft_image = np.fft.fftshift(dft_image)
-        dft_image = to_real(dft_image)
+        dft_image = magnitude(dft_image)
         dft_image = np.log(dft_image + 1)
 
         fft_kernel = np.fft.fftshift(fft_kernel)
 
         dft_image_filtered = np.fft.fftshift(dft_image_filtered)
-        dft_image_filtered = to_real(dft_image_filtered)
+        dft_image_filtered = magnitude(dft_image_filtered)
         dft_image_filtered = np.log(dft_image_filtered + 1)
 
         # Use plt.subplot to place two or more images beside eachother
@@ -57,7 +61,7 @@ def convolve_im(im: np.array,
 
         # Visualize filtered FFT image
         plt.subplot(1, 5, 4)
-        plt.imshow(np.fft.fftshift(dft_image_filtered))
+        plt.imshow(dft_image_filtered)
 
         # Visualize filtered spatial image
         plt.subplot(1, 5, 5)
