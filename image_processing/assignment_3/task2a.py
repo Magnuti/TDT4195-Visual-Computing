@@ -20,17 +20,15 @@ def otsu_thresholding(im: np.ndarray) -> int:
     # You can also define other helper functions
     # Compute normalized histogram
 
-    INTENSITY_RANGE = 255  # Number of grayscale values [0-255]
+    # Number of grayscale values
+    INTENSITY_RANGE = im.max() - im.min() + 1
 
-    threshold = 128
     hist, bins = np.histogram(im, bins=INTENSITY_RANGE)
 
     # Normalize hist
     # New array so we don't mix up float and ints
-    hist_normalized = np.empty(INTENSITY_RANGE, dtype=float)
     number_of_pixels = im.shape[0] * im.shape[1]
-    for i in range(len(hist)):
-        hist_normalized[i] = float(hist[i]) / float(number_of_pixels)
+    hist_normalized = hist / number_of_pixels
 
     # Cumulative sums
     cumulative_sums = np.cumsum(hist_normalized)
@@ -41,13 +39,10 @@ def otsu_thresholding(im: np.ndarray) -> int:
     for i in range(1, len(hist_normalized)):
         cumulative_means[i] = cumulative_means[i - 1] + i * hist_normalized[i]
 
-    # Global mean
-    global_mean = 0
-    for i in range(len(hist_normalized)):
-        global_mean += i * hist_normalized[i]
+    # Global mean is the last element in cumulative means
+    global_mean = cumulative_means[-1]
 
     # Between-class variances
-    between_class_variances = np.empty(INTENSITY_RANGE, dtype=float)
     between_class_variances = (global_mean * cumulative_sums -
                                cumulative_means)**2 / (cumulative_sums * (1 - cumulative_sums))
 
@@ -59,6 +54,9 @@ def otsu_thresholding(im: np.ndarray) -> int:
             max_indexes.append(i)
 
     threshold = sum(max_indexes) / len(max_indexes)
+
+    # Add im.min() since we operate with arrays starting at 0, not im.min()
+    threshold += im.min()
 
     # plt.figure(figsize=(16, 5))
     # columns = 1
