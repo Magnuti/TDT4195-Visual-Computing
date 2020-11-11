@@ -1,5 +1,6 @@
 import utils
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def region_growing(im: np.ndarray, seed_points: list, T: int) -> np.ndarray:
@@ -19,10 +20,34 @@ def region_growing(im: np.ndarray, seed_points: list, T: int) -> np.ndarray:
     """
     # START YOUR CODE HERE ### (You can change anything inside this block)
     # You can also define other helper functions
+
+    # TODO handle out of bounds on edges?
+
     segmented = np.zeros_like(im).astype(bool)
     im = im.astype(float)
+
+    def visit_pixel(seed_point_value, row, col):
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                # Skip the calling pixel
+                if(i == 0 and j == 0):
+                    continue
+
+                # Skip already found pixels
+                if(not segmented[row + i, col + j]):
+                    # Calculate if this pixel should be taken into account or not
+                    if(abs(im[row + i, col + j] - seed_point_value) < T):
+                        segmented[row + i, col + j] = True
+                        visit_pixel(seed_point_value, row + i, col + j)
+
     for row, col in seed_points:
         segmented[row, col] = True
+        visit_pixel(im[row, col], row, col)
+
+    # plt.figure()
+    # plt.imshow(segmented)
+    # plt.show()
+
     return segmented
     ### END YOUR CODE HERE ###
 
