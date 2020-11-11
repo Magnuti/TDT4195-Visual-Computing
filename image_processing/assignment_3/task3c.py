@@ -23,7 +23,7 @@ def extract_boundary(im: np.ndarray) -> np.ndarray:
 
     # Simple XOR to compute the border. The .binary_erosion(im) image will have boolean
     # values different from the original image at the border/edges.
-    return np.logical_xor(im, skimage.morphology.binary_erosion(im))
+    return np.logical_xor(im, skimage.morphology.binary_erosion(im, selem=structuring_element))
     ### END YOUR CODE HERE ###
 
 
