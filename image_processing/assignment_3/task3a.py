@@ -61,6 +61,7 @@ def remove_noise(im: np.ndarray) -> np.ndarray:
 
     # plt.savefig("image_processed/task3a_pyplot.png")
     # plt.show()
+    plt.close()
 
     return im
     ### END YOUR CODE HERE ###

@@ -23,6 +23,25 @@ def distance_transform(im: np.ndarray) -> np.ndarray:
         [1, 1, 1]
     ], dtype=bool)
     result = im.astype(np.int32)
+    found = np.zeros(im.shape).astype(bool)
+
+    # First iterator, find initial black values
+    for row in range(im.shape[0]):
+        for col in range(im.shape[1]):
+            if(not im[row, col]):
+                result[row, col] = 0
+                found[row, col] = True
+
+    counter = 0
+    while(im.max()):
+        counter += 1
+        im = skimage.morphology.binary_erosion(im, structuring_element)
+        for row in range(im.shape[0]):
+            for col in range(im.shape[1]):
+                if(not im[row, col] and not found[row, col]):
+                    result[row, col] = counter
+                    found[row, col] = True
+
     return result
     ### END YOUR CODE HERE ###
 
