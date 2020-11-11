@@ -3,6 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+# Since Python is such a trashy language, it isn't tail call optimized and the stackframes are large.
+# So, we have to incrase the recursion limit since it is 1000 by default.
+# I would have written the algorithm iteratively instead if I knew this beforehand.
+import sys
+sys.setrecursionlimit(3000)
+
+
 def region_growing(im: np.ndarray, seed_points: list, T: int) -> np.ndarray:
     """
         A region growing algorithm that segments an image into 1 or 0 (True or False).
@@ -21,8 +28,6 @@ def region_growing(im: np.ndarray, seed_points: list, T: int) -> np.ndarray:
     # START YOUR CODE HERE ### (You can change anything inside this block)
     # You can also define other helper functions
 
-    # TODO handle out of bounds on edges?
-
     segmented = np.zeros_like(im).astype(bool)
     im = im.astype(float)
 
@@ -31,6 +36,9 @@ def region_growing(im: np.ndarray, seed_points: list, T: int) -> np.ndarray:
             for j in range(-1, 2):
                 # Skip the calling pixel
                 if(i == 0 and j == 0):
+                    continue
+                # Handle out of bounds on image borders
+                if(row + i < 0 or row + i >= im.shape[0] or col + j < 0 or col + j >= im.shape[1]):
                     continue
 
                 # Skip already found pixels
