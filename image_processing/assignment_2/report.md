@@ -25,62 +25,64 @@ If we perform pooling/subsampling with a $2x2$ kernel on a $504x504$ layer with 
 $outputImageDimension = (252 - 3 + 2 * 0) / 1 + 1 = 249 + 0 + 1 = 250$
 
 ### 1.e)
-Each filter has $filterDimension^2 * channels$ number of weights. So, a $4x4$ filter with 3 channels, will have $4^2 * 3 = 16 * 3 = 48$ number of weights. Since we can have more than one filter, we multiply the result with the number of filters. So, three filters result in $48*3=144$ weights.  
-The number of biases is the same as the number of filters. So, we have a total of $144+3=147$ weights.
+Each filter has $filterDimension^2 * channels$ number of weights. So, a $5x5$ filter with 3 channels, will have $5^2*3=75$ number of weights. Since we can have more than one filter, we multiply the result with the number of filters. So, 32 filters result in $75*32=2400$ weights.  
+The number of biases is the same as the number of filters. So, we have a total of $2400+32=2432$ paremeters.
 
-Convolution layer:
-* Input 32x32 with 1 channels (grayscale)
+We use the formula $kernel\ dimension*input\ channels*number\ of\ filters+number\ of\ filters\ (i.e.\ bias)$ to calculate the number of parameters in each convolutional layer.
+
+Convolution layer 1:
+* Input 32x32 with 3 channels (RGB)
 * Kernel = 5x5, stride = 1, padding = 2
-* Output 32x32
+* Filter dimension = 5x5x3
 * Number of filters = 32
-* Number of weights = $5^2*1*32+32=832$
-* Number of output channels = $1*32=32$
+* Number of parameters = $5^2*3*32+32=2432$
+* Output dimension: 32x32 (unchanged)
 
-Pooling layer:
+Pooling layer 1:
 * Input 32x32
 * Max pooling with kernel size = 2x2, stride = 2
-* Output 16*16
+* Output 16x16
 
-Convolution layer:
+Convolution layer 2:
 * Input 16x16 with 32 channels
 * Kernel = 3x3, stride = 1, padding = 1
-* Output 16*16
 * Number of filters = 64
-* Number of weights = $3^2*32*64 + 64=18 496$
-* Number of output channels = $32*64=2048$
+* Filter dimension = 3x3x32
+* Number of parameters = $3^2*32*64+64=18496$
+* Output dimension: 16x16 (unchanged)
 
-Pooling layer:
+Pooling layer 2:
 * Input 16*16
 * Max pooling with kernel size = 2x2, stride = 2
 * Output 8x8
 
-Convolution layer:
-* Input 8x8 with 2048 channels
+Convolution layer 3:
+* Input 8x8 with 64 channels
 * Kernel = 3x3, stride = 1, padding = 1
-* Output 8x8
 * Number of filters = 128
-* Number of weights = $3^2*2048*128 + 128=2 359 424$
-* Number of output channels = $2048*128=262 144$
+* Filter dimension = 3x3x64
+* Number of parameters = $3^2*64*128+128=73856$
+* Output dimension: 8x8 (unchanged)
 
-Pooling layer:
+Pooling layer 3:
 * Input 8x8
 * Max pooling with kernel size = 2x2, stride = 2
 * Output 4x4
 
 Flatten:
-* Input 4x4 with 262 144 = 4 194 304 inputs
+* Input 4x4 with 128 channels = 2048 input nodes
 
-Fully-connected layer:
-* Input units = 4 194 304
-* Output units = 64
-* Connections =  $4 194 304 * 64 = 268 435 456$
+Fully-connected layer 1:
+* Input nodes: 2048
+* Output nodes: 64
+* Connections = weights + biases = $2048*64+64=131136$
 
-Fully-connected layer:
+Fully-connected layer 2:
 * Input units = 64
 * Output units = 10
-* Connections = $64 * 10 = 640$
+* Connections = weights + biases = $64*10+10=650$
 
-For a total of $32 + 2048 + 262 144 + 268 435 456 + 640 = 268 700 320$ weights.
+For a total of $2432+18496+73856+131136+650=226570$ parameters.
 
 ## Task 2
 
