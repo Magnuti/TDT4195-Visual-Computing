@@ -1,7 +1,8 @@
-/.vscode
-**/__pycache__
+.vscode/
+**/__pycache__/
+env/
 
 *.docx
 *.one
 *.onetoc2
-Image \processing \boka.pdf
+*.zip
